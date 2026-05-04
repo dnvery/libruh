@@ -9,6 +9,7 @@ import me.dnvery.libruh.exception.FileUploadException;
 import me.dnvery.libruh.exception.ResourceNotFoundException;
 import me.dnvery.libruh.repository.BookRepository;
 import me.dnvery.libruh.repository.UserRepository;
+import me.dnvery.libruh.service.Fb2MetadataParser.ParsedMetadata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -19,11 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +34,8 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
+    private final Fb2MetadataParser metadataParser;
+    private final ConversionService conversionService;
 
     @Value("${storage.dir:/app/storage}")
     private String storageDir;
@@ -46,9 +49,12 @@ public class BookService {
     @Value("${storage.azw8-subdir:azw8}")
     private String azw8Subdir;
 
-    public BookService(BookRepository bookRepository, UserRepository userRepository) {
+    public BookService(BookRepository bookRepository, UserRepository userRepository,
+                       Fb2MetadataParser metadataParser, ConversionService conversionService) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
+        this.metadataParser = metadataParser;
+        this.conversionService = conversionService;
     }
 
     public BookListResponse listBooks(int page, int size) {
@@ -83,15 +89,35 @@ public class BookService {
             throw new FileUploadException("Failed to save file: " + e.getMessage());
         }
 
+        String fb2Content = null;
+        try {
+            fb2Content = Files.readString(fb2Path, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            // Will fall back to defaults
+        }
+
         Book book = new Book();
-        book.setTitle(originalFilename.replaceAll("(?i)\\.fb2$", ""));
-        book.setAuthor("Unknown");
         book.setFb2FilePath(fb2Path.toString());
         book.setConversionStatus(ConversionStatus.PENDING);
         book.setUser(userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found")));
 
+        if (fb2Content != null) {
+            ParsedMetadata metadata = metadataParser.parse(fb2Content);
+            book.setTitle(metadata.getTitle() != null ? metadata.getTitle() : sanitizeFilename(originalFilename));
+            book.setAuthor(metadata.getAuthor() != null ? metadata.getAuthor() : "Unknown");
+            book.setGenre(metadata.getGenre());
+            book.setDescription(metadata.getDescription());
+            book.setPublicationDate(metadata.getPublicationDate());
+            book.setLanguage(metadata.getLanguage());
+        } else {
+            book.setTitle(sanitizeFilename(originalFilename));
+            book.setAuthor("Unknown");
+        }
+
         book = bookRepository.save(book);
+        conversionService.convertAsync(book.getId());
+
         return toResponse(book);
     }
 
@@ -186,6 +212,10 @@ public class BookService {
 
         String sanitizedTitle = book.getTitle().replaceAll("[^a-zA-Z0-9\\s\\-]", "").replaceAll("\\s+", "_");
         return sanitizedTitle + "." + format.toLowerCase();
+    }
+
+    private String sanitizeFilename(String filename) {
+        return filename.replaceAll("(?i)\\.fb2$", "").replaceAll("[^a-zA-Z0-9\\s\\-]", "").trim();
     }
 
     private void deleteFileIfExists(String filePath) {
