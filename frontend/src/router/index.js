@@ -26,15 +26,15 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/books/:id',
-    name: 'BookDetail',
-    component: () => import('../views/BookDetailView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
     path: '/books/upload',
     name: 'BookUpload',
     component: () => import('../views/BookUploadView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/books/:id',
+    name: 'BookDetail',
+    component: () => import('../views/BookDetailView.vue'),
     meta: { requiresAuth: true },
   },
 ]
