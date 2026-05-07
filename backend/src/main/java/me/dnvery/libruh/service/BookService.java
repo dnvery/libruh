@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +28,8 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Service
 @Transactional
@@ -74,17 +77,28 @@ public class BookService {
         }
 
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".fb2")) {
-            throw new FileUploadException("Only .fb2 files are accepted");
+        if (originalFilename == null) {
+            throw new FileUploadException("Filename is missing");
+        }
+
+        String lowerFilename = originalFilename.toLowerCase();
+        if (!lowerFilename.endsWith(".fb2") && !lowerFilename.endsWith(".fb2.zip")) {
+            throw new FileUploadException("Only .fb2 and .fb2.zip files are accepted");
         }
 
         String uuid = UUID.randomUUID().toString();
         Path fb2Dir = Paths.get(storageDir, fb2Subdir);
-        Path fb2Path = fb2Dir.resolve(uuid + ".fb2");
+        Path fb2Path;
 
         try {
             Files.createDirectories(fb2Dir);
-            Files.copy(file.getInputStream(), fb2Path);
+
+            if (lowerFilename.endsWith(".fb2.zip")) {
+                fb2Path = extractFb2FromZip(file.getInputStream(), fb2Dir, uuid);
+            } else {
+                fb2Path = fb2Dir.resolve(uuid + ".fb2");
+                Files.copy(file.getInputStream(), fb2Path);
+            }
         } catch (IOException e) {
             throw new FileUploadException("Failed to save file: " + e.getMessage());
         }
@@ -119,6 +133,24 @@ public class BookService {
         conversionService.convertAsync(book.getId());
 
         return toResponse(book);
+    }
+
+    private Path extractFb2FromZip(InputStream zipInputStream, Path targetDir, String uuid) throws IOException {
+        try (ZipInputStream zis = new ZipInputStream(zipInputStream)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName().toLowerCase();
+                if (entryName.endsWith(".fb2")) {
+                    Path fb2Path = targetDir.resolve(uuid + ".fb2");
+                    Files.copy(zis, fb2Path);
+                    return fb2Path;
+                }
+            }
+        }
+        throw new FileUploadException("No .fb2 file found inside the .zip archive");
     }
 
     public BookResponse updateBook(Long id, BookUpdateRequest request, String username) {
@@ -215,7 +247,7 @@ public class BookService {
     }
 
     private String sanitizeFilename(String filename) {
-        return filename.replaceAll("(?i)\\.fb2$", "").replaceAll("[^a-zA-Z0-9\\s\\-]", "").trim();
+        return filename.replaceAll("(?i)\\.fb2\\.zip$", "").replaceAll("(?i)\\.fb2$", "").replaceAll("[^a-zA-Z0-9\\s\\-]", "").trim();
     }
 
     private void deleteFileIfExists(String filePath) {

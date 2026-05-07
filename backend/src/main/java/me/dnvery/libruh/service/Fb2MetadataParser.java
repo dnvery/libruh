@@ -40,7 +40,7 @@ public class Fb2MetadataParser {
 
             if (titleInfo != null) {
                 metadata.setTitle(getText(titleInfo, "book-title"));
-                metadata.setGenre(getText(titleInfo, "genre"));
+                metadata.setGenre(formatGenres(titleInfo));
                 metadata.setLanguage(getText(titleInfo, "lang"));
 
                 String dateText = getText(titleInfo, "date");
@@ -133,6 +133,27 @@ public class Fb2MetadataParser {
             }
         }
         return sb.toString().trim();
+    }
+
+    private String formatGenres(Element titleInfo) {
+        NodeList genreNodes = titleInfo.getElementsByTagName("genre");
+        if (genreNodes.getLength() == 0) return null;
+
+        List<String> genres = new ArrayList<>();
+        for (int i = 0; i < genreNodes.getLength(); i++) {
+            String raw = genreNodes.item(i).getTextContent();
+            if (raw != null && !raw.isBlank()) {
+                genres.add(formatGenreCode(raw.trim()));
+            }
+        }
+        return genres.isEmpty() ? null : String.join(", ", genres);
+    }
+
+    private String formatGenreCode(String code) {
+        String readable = code.replace('_', ' ');
+        readable = readable.replaceAll("\\s+\\d+$", "");
+        if (readable.isEmpty()) return code;
+        return Character.toUpperCase(readable.charAt(0)) + readable.substring(1);
     }
 
     public static class ParsedMetadata {

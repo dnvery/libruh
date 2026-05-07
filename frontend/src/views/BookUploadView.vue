@@ -52,9 +52,21 @@ const uploadSuccess = ref(false)
 const uploadedBookId = ref(null)
 
 function onFileChange(e) {
-  selectedFile.value = e.target.files[0]
+  const file = e.target.files[0]
   error.value = ''
   uploadSuccess.value = false
+
+  if (file) {
+    const name = file.name.toLowerCase()
+    if (!name.endsWith('.fb2') && !name.endsWith('.fb2.zip')) {
+      error.value = 'Only .fb2 and .fb2.zip files are accepted'
+      selectedFile.value = null
+      e.target.value = ''
+      return
+    }
+  }
+
+  selectedFile.value = file
 }
 
 async function handleUpload() {
