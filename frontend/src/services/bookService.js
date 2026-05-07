@@ -23,8 +23,8 @@ export const bookService = {
     return api.delete(`/books/${id}`)
   },
 
-  search(query, field = 'title') {
-    return api.get('/books/search', { params: { query, field } })
+  search(query, field = 'title', page = 0, size = 20) {
+    return api.get('/books/search', { params: { query, field, page, size } })
   },
 
   downloadEpub(id) {

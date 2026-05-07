@@ -10,6 +10,8 @@
       </router-link>
     </div>
 
+    <SearchBar @search="handleSearch" @clear="handleClear" class="mb-4" />
+
     <div v-if="loading" class="text-center py-12 text-gray-500">Loading books...</div>
 
     <div v-else-if="error" class="text-center py-12 text-red-600 bg-red-50 rounded-lg">
@@ -17,10 +19,14 @@
     </div>
 
     <div v-else-if="books.length === 0" class="text-center py-12 text-gray-500">
-      No books yet. Upload your first FB2 file!
+      {{ searchActive ? 'No books found matching your search.' : 'No books yet. Upload your first FB2 file!' }}
     </div>
 
     <div v-else>
+      <p v-if="searchActive" class="text-sm text-gray-500 mb-3">
+        Showing results for "{{ searchQuery }}" in {{ searchField }}
+      </p>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <router-link
           v-for="book in books"
@@ -69,6 +75,7 @@
 import { ref, onMounted } from 'vue'
 import { useBooksStore } from '../stores/books'
 import { bookService } from '../services/bookService'
+import SearchBar from '../components/SearchBar.vue'
 
 const booksStore = useBooksStore()
 const loading = ref(true)
@@ -76,6 +83,9 @@ const error = ref('')
 
 const books = ref([])
 const pagination = ref({ page: 0, size: 20, totalElements: 0, totalPages: 0 })
+const searchActive = ref(false)
+const searchQuery = ref('')
+const searchField = ref('title')
 
 function statusClass(status) {
   switch (status) {
@@ -94,7 +104,12 @@ async function loadPage(page) {
   loading.value = true
   error.value = ''
   try {
-    const { data } = await bookService.list(page, 20)
+    let data
+    if (searchActive.value) {
+      ;({ data } = await bookService.search(searchQuery.value, searchField.value, page, 20))
+    } else {
+      ;({ data } = await bookService.list(page, 20))
+    }
     books.value = data.books
     pagination.value = {
       page: data.page,
@@ -109,6 +124,20 @@ async function loadPage(page) {
   } finally {
     loading.value = false
   }
+}
+
+function handleSearch(query, field) {
+  searchActive.value = true
+  searchQuery.value = query
+  searchField.value = field
+  loadPage(0)
+}
+
+function handleClear() {
+  searchActive.value = false
+  searchQuery.value = ''
+  searchField.value = 'title'
+  loadPage(0)
 }
 
 onMounted(() => loadPage(0))
