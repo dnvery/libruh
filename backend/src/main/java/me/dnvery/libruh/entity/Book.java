@@ -32,6 +32,12 @@ public class Book {
     @Column(length = 10)
     private String language;
 
+    @Column(name = "sequence_name", length = 255)
+    private String sequenceName;
+
+    @Column(name = "sequence_number", length = 10)
+    private String sequenceNumber;
+
     @Column(name = "fb2_file_path", nullable = false, length = 1000)
     private String fb2FilePath;
 
@@ -43,6 +49,12 @@ public class Book {
 
     @Column(name = "cover_image_path", length = 1000)
     private String coverImagePath;
+
+    @Column(name = "epub_file_size")
+    private Long epubFileSize;
+
+    @Column(name = "azw8_file_size")
+    private Long azw8FileSize;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "conversion_status", nullable = false, length = 20)
@@ -74,6 +86,10 @@ public class Book {
     public void setPublicationDate(LocalDate publicationDate) { this.publicationDate = publicationDate; }
     public String getLanguage() { return language; }
     public void setLanguage(String language) { this.language = language; }
+    public String getSequenceName() { return sequenceName; }
+    public void setSequenceName(String sequenceName) { this.sequenceName = sequenceName; }
+    public String getSequenceNumber() { return sequenceNumber; }
+    public void setSequenceNumber(String sequenceNumber) { this.sequenceNumber = sequenceNumber; }
     public String getFb2FilePath() { return fb2FilePath; }
     public void setFb2FilePath(String fb2FilePath) { this.fb2FilePath = fb2FilePath; }
     public String getEpubFilePath() { return epubFilePath; }
@@ -82,6 +98,10 @@ public class Book {
     public void setAzw8FilePath(String azw8FilePath) { this.azw8FilePath = azw8FilePath; }
     public String getCoverImagePath() { return coverImagePath; }
     public void setCoverImagePath(String coverImagePath) { this.coverImagePath = coverImagePath; }
+    public Long getEpubFileSize() { return epubFileSize; }
+    public void setEpubFileSize(Long epubFileSize) { this.epubFileSize = epubFileSize; }
+    public Long getAzw8FileSize() { return azw8FileSize; }
+    public void setAzw8FileSize(Long azw8FileSize) { this.azw8FileSize = azw8FileSize; }
     public ConversionStatus getConversionStatus() { return conversionStatus; }
     public void setConversionStatus(ConversionStatus conversionStatus) { this.conversionStatus = conversionStatus; }
     public Instant getUploadDate() { return uploadDate; }

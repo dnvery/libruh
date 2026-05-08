@@ -3,6 +3,7 @@ package me.dnvery.libruh.controller;
 import me.dnvery.libruh.dto.book.BookListResponse;
 import me.dnvery.libruh.dto.book.BookResponse;
 import me.dnvery.libruh.dto.book.BookUpdateRequest;
+import me.dnvery.libruh.dto.book.ConversionDetailResponse;
 import me.dnvery.libruh.service.BookService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
@@ -97,5 +98,10 @@ public class BookController {
                 .contentType(MediaType.parseMediaType(cover.contentType()))
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
                 .body(cover.resource());
+    }
+
+    @GetMapping("/{id}/conversion")
+    public ResponseEntity<ConversionDetailResponse> getConversionDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(bookService.getConversionDetail(id));
     }
 }

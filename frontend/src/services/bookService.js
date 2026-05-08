@@ -38,4 +38,8 @@ export const bookService = {
   coverUrl(id) {
     return `/api/books/${id}/cover`
   },
+
+  conversionDetail(id) {
+    return api.get(`/books/${id}/conversion`)
+  },
 }

@@ -54,6 +54,31 @@
             />
           </div>
 
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="sequenceName" class="block text-sm font-medium text-gray-700 mb-1">Series</label>
+              <input
+                id="sequenceName"
+                v-model="form.sequenceName"
+                type="text"
+                maxlength="255"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="e.g. Trilogy of Snopes"
+              />
+            </div>
+            <div>
+              <label for="sequenceNumber" class="block text-sm font-medium text-gray-700 mb-1">Book #</label>
+              <input
+                id="sequenceNumber"
+                v-model="form.sequenceNumber"
+                type="text"
+                maxlength="10"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="e.g. 1"
+              />
+            </div>
+          </div>
+
           <div>
             <label for="publicationDate" class="block text-sm font-medium text-gray-700 mb-1">Publication Date</label>
             <input
@@ -117,6 +142,8 @@ const form = reactive({
   language: props.book.language || '',
   publicationDate: props.book.publicationDate || '',
   description: props.book.description || '',
+  sequenceName: props.book.sequenceName || '',
+  sequenceNumber: props.book.sequenceNumber || '',
 })
 
 const saving = ref(false)

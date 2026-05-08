@@ -91,14 +91,16 @@ public class ConversionService {
                 Path renamedEpub = epubDir.resolve(uuid + ".epub");
                 Files.move(epubFile, renamedEpub);
                 book.setEpubFilePath(renamedEpub.toString());
-                log.info("EPUB converted: {}", renamedEpub);
+                book.setEpubFileSize(Files.size(renamedEpub));
+                log.info("EPUB converted: {} ({} bytes)", renamedEpub, book.getEpubFileSize());
             }
 
             if (azw8File != null) {
                 Path renamedAzw8 = azw8Dir.resolve(uuid + ".azw8");
                 Files.move(azw8File, renamedAzw8);
                 book.setAzw8FilePath(renamedAzw8.toString());
-                log.info("AZW8 converted: {}", renamedAzw8);
+                book.setAzw8FileSize(Files.size(renamedAzw8));
+                log.info("AZW8 converted: {} ({} bytes)", renamedAzw8, book.getAzw8FileSize());
             }
 
             book.setConversionStatus(ConversionStatus.COMPLETED);

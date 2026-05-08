@@ -18,10 +18,15 @@ public class BookResponse {
     private Long userId;
     private String username;
     private boolean hasCover;
+    private Long epubFileSize;
+    private Long azw8FileSize;
+    private String sequenceName;
+    private String sequenceNumber;
 
     public BookResponse(Long id, String title, String author, String genre, String description,
                         LocalDate publicationDate, String language, ConversionStatus conversionStatus,
-                        Instant uploadDate, Long userId, String username, boolean hasCover) {
+                        Instant uploadDate, Long userId, String username, boolean hasCover,
+                        Long epubFileSize, Long azw8FileSize, String sequenceName, String sequenceNumber) {
         this.id = id;
         this.title = title;
         this.author = author;
@@ -34,6 +39,10 @@ public class BookResponse {
         this.userId = userId;
         this.username = username;
         this.hasCover = hasCover;
+        this.epubFileSize = epubFileSize;
+        this.azw8FileSize = azw8FileSize;
+        this.sequenceName = sequenceName;
+        this.sequenceNumber = sequenceNumber;
     }
 
     public Long getId() { return id; }
@@ -48,4 +57,8 @@ public class BookResponse {
     public Long getUserId() { return userId; }
     public String getUsername() { return username; }
     public boolean isHasCover() { return hasCover; }
+    public Long getEpubFileSize() { return epubFileSize; }
+    public Long getAzw8FileSize() { return azw8FileSize; }
+    public String getSequenceName() { return sequenceName; }
+    public String getSequenceNumber() { return sequenceNumber; }
 }

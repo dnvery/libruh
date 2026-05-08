@@ -69,6 +69,18 @@ public class Fb2MetadataParser {
                 if (annotation != null) {
                     metadata.setDescription(extractTextContent(annotation));
                 }
+
+                Element sequenceEl = getFirstElement(titleInfo, "sequence");
+                if (sequenceEl != null) {
+                    String seqName = sequenceEl.getAttribute("name");
+                    String seqNumber = sequenceEl.getAttribute("number");
+                    if (seqName != null && !seqName.isBlank()) {
+                        metadata.setSequenceName(seqName.trim());
+                        if (seqNumber != null && !seqNumber.isBlank()) {
+                            metadata.setSequenceNumber(seqNumber.trim());
+                        }
+                    }
+                }
             }
 
             metadata.setCoverImage(extractCoverImage(doc));
@@ -270,6 +282,8 @@ public class Fb2MetadataParser {
         private LocalDate publicationDate;
         private String language;
         private CoverImage coverImage;
+        private String sequenceName;
+        private String sequenceNumber;
 
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }
@@ -285,6 +299,10 @@ public class Fb2MetadataParser {
         public void setLanguage(String language) { this.language = language; }
         public CoverImage getCoverImage() { return coverImage; }
         public void setCoverImage(CoverImage coverImage) { this.coverImage = coverImage; }
+        public String getSequenceName() { return sequenceName; }
+        public void setSequenceName(String sequenceName) { this.sequenceName = sequenceName; }
+        public String getSequenceNumber() { return sequenceNumber; }
+        public void setSequenceNumber(String sequenceNumber) { this.sequenceNumber = sequenceNumber; }
     }
 
     public static class CoverImage {

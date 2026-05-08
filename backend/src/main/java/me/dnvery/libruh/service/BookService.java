@@ -3,6 +3,7 @@ package me.dnvery.libruh.service;
 import me.dnvery.libruh.dto.book.BookListResponse;
 import me.dnvery.libruh.dto.book.BookResponse;
 import me.dnvery.libruh.dto.book.BookUpdateRequest;
+import me.dnvery.libruh.dto.book.ConversionDetailResponse;
 import me.dnvery.libruh.entity.Book;
 import me.dnvery.libruh.enums.ConversionStatus;
 import me.dnvery.libruh.exception.FileUploadException;
@@ -44,6 +45,7 @@ public class BookService {
     private final UserRepository userRepository;
     private final Fb2MetadataParser metadataParser;
     private final ConversionService conversionService;
+    private final EpubMetadataParser epubMetadataParser;
 
     @Value("${storage.dir:/app/storage}")
     private String storageDir;
@@ -61,11 +63,13 @@ public class BookService {
     private String coversSubdir;
 
     public BookService(BookRepository bookRepository, UserRepository userRepository,
-                       Fb2MetadataParser metadataParser, ConversionService conversionService) {
+                       Fb2MetadataParser metadataParser, ConversionService conversionService,
+                       EpubMetadataParser epubMetadataParser) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
         this.metadataParser = metadataParser;
         this.conversionService = conversionService;
+        this.epubMetadataParser = epubMetadataParser;
     }
 
     public BookListResponse listBooks(int page, int size) {
@@ -132,6 +136,8 @@ public class BookService {
             book.setDescription(metadata.getDescription());
             book.setPublicationDate(metadata.getPublicationDate());
             book.setLanguage(metadata.getLanguage());
+            book.setSequenceName(metadata.getSequenceName());
+            book.setSequenceNumber(metadata.getSequenceNumber());
 
             if (metadata.getCoverImage() != null) {
                 try {
@@ -188,6 +194,8 @@ public class BookService {
         book.setGenre(request.getGenre());
         book.setDescription(request.getDescription());
         book.setLanguage(request.getLanguage());
+        book.setSequenceName(request.getSequenceName());
+        book.setSequenceNumber(request.getSequenceNumber());
 
         if (request.getPublicationDate() != null && !request.getPublicationDate().isBlank()) {
             try {
@@ -269,6 +277,54 @@ public class BookService {
         return sanitizedTitle + "." + format.toLowerCase();
     }
 
+    public ConversionDetailResponse getConversionDetail(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
+
+        String epubTitle = null;
+        String epubAuthor = null;
+        String epubPublisher = null;
+        String epubLanguage = null;
+        String epubIdentifier = null;
+        String epubPublicationDate = null;
+        List<String> epubSubjects = null;
+
+        if (book.getEpubFilePath() != null && !book.getEpubFilePath().isBlank()) {
+            try {
+                Path epubPath = Paths.get(book.getEpubFilePath());
+                if (Files.exists(epubPath)) {
+                    log.info("Reading EPUB for book {}, path={}", id, epubPath);
+                    EpubMetadataParser.EpubMetadata epubMeta = epubMetadataParser.parse(epubPath);
+                    epubTitle = epubMeta.getTitle();
+                    epubAuthor = epubMeta.getAuthor();
+                    epubPublisher = epubMeta.getPublisher();
+                    epubLanguage = epubMeta.getLanguage();
+                    epubIdentifier = epubMeta.getIdentifier();
+                    epubPublicationDate = epubMeta.getPublicationDate();
+                    epubSubjects = epubMeta.getSubjects();
+                } else {
+                    log.warn("EPUB file not found on disk for book {}: {}", id, epubPath);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse EPUB metadata for book {}: {}", id, e.getMessage());
+            }
+        }
+
+        return new ConversionDetailResponse(
+                book.getId(),
+                book.getConversionStatus().name(),
+                book.getEpubFileSize(),
+                book.getAzw8FileSize(),
+                epubTitle,
+                epubAuthor,
+                epubPublisher,
+                epubLanguage,
+                epubIdentifier,
+                epubPublicationDate,
+                epubSubjects
+        );
+    }
+
     public CoverImageData getCoverImage(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
@@ -340,7 +396,11 @@ public class BookService {
                 book.getUploadDate(),
                 book.getUser().getId(),
                 book.getUser().getUsername(),
-                book.getCoverImagePath() != null && !book.getCoverImagePath().isBlank()
+                book.getCoverImagePath() != null && !book.getCoverImagePath().isBlank(),
+                book.getEpubFileSize(),
+                book.getAzw8FileSize(),
+                book.getSequenceName(),
+                book.getSequenceNumber()
         );
     }
 
