@@ -32,18 +32,32 @@
           v-for="book in books"
           :key="book.id"
           :to="`/books/${book.id}`"
-          class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-4 block"
+          class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden block"
         >
-          <h3 class="font-semibold text-gray-800 mb-1 truncate">{{ book.title }}</h3>
-          <p class="text-sm text-gray-600 mb-2 truncate">{{ book.author }}</p>
-          <div class="flex items-center gap-2 text-xs">
-            <span
-              :class="statusClass(book.conversionStatus)"
-              class="px-2 py-0.5 rounded-full font-medium"
-            >
-              {{ book.conversionStatus }}
-            </span>
-            <span v-if="book.genre" class="text-gray-400">{{ book.genre }}</span>
+          <div class="aspect-[2/3] bg-gray-100 flex items-center justify-center overflow-hidden">
+            <img
+              v-if="book.hasCover"
+              :src="`/api/books/${book.id}/cover`"
+              :alt="book.title"
+              class="w-full h-full object-contain"
+              loading="lazy"
+            />
+            <svg v-else class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div class="p-3">
+            <h3 class="font-semibold text-gray-800 text-sm truncate">{{ book.title }}</h3>
+            <p class="text-xs text-gray-500 truncate mt-0.5">{{ book.author }}</p>
+            <div class="flex items-center gap-2 mt-2">
+              <span
+                :class="statusClass(book.conversionStatus)"
+                class="px-2 py-0.5 rounded-full text-xs font-medium"
+              >
+                {{ book.conversionStatus }}
+              </span>
+              <span v-if="book.genre" class="text-xs text-gray-400 truncate">{{ book.genre }}</span>
+            </div>
           </div>
         </router-link>
       </div>

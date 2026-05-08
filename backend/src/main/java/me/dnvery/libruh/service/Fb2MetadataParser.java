@@ -13,6 +13,7 @@ import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -27,7 +28,7 @@ public class Fb2MetadataParser {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(false);
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
             factory.setXIncludeAware(false);
 
             Document doc = factory.newDocumentBuilder()
@@ -69,6 +70,8 @@ public class Fb2MetadataParser {
                     metadata.setDescription(extractTextContent(annotation));
                 }
             }
+
+            metadata.setCoverImage(extractCoverImage(doc));
 
             if (metadata.getTitle() == null || metadata.getTitle().isBlank()) {
                 metadata.setTitle("Unknown Title");
@@ -156,6 +159,109 @@ public class Fb2MetadataParser {
         return Character.toUpperCase(readable.charAt(0)) + readable.substring(1);
     }
 
+    private CoverImage extractCoverImage(Document doc) {
+        String imageId = null;
+
+        Element titleInfo = getFirstElementByTagPath(doc.getDocumentElement(), "description", "title-info");
+        if (titleInfo == null) {
+            titleInfo = getFirstElement(doc.getDocumentElement(), "title-info");
+        }
+
+        if (titleInfo != null) {
+            Element coverpage = getFirstElement(titleInfo, "coverpage");
+            if (coverpage != null) {
+                NodeList images = coverpage.getElementsByTagName("image");
+                for (int i = 0; i < images.getLength(); i++) {
+                    Element image = (Element) images.item(i);
+                    String href = image.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+                    if (href == null || href.isEmpty()) {
+                        href = image.getAttribute("l:href");
+                    }
+                    if (href == null || href.isEmpty()) {
+                        href = image.getAttribute("href");
+                    }
+                    if (href != null && !href.isEmpty() && href.startsWith("#")) {
+                        imageId = href.substring(1);
+                        log.debug("Found cover image reference: id={}", imageId);
+                        break;
+                    }
+                }
+            }
+        }
+
+        NodeList binaries = doc.getElementsByTagName("binary");
+        for (int i = 0; i < binaries.getLength(); i++) {
+            Element binary = (Element) binaries.item(i);
+            String id = binary.getAttribute("id");
+
+            if (imageId != null && !imageId.equals(id)) {
+                continue;
+            }
+
+            String contentType = binary.getAttribute("content-type");
+            if (contentType == null || contentType.isEmpty()) {
+                contentType = guessContentType(id);
+            }
+
+            if (contentType != null && contentType.startsWith("image/")) {
+                String base64Data = binary.getTextContent().replaceAll("\\s+", "");
+                if (!base64Data.isEmpty()) {
+                    try {
+                        byte[] imageBytes = Base64.getMimeDecoder().decode(base64Data);
+                        String extension = extensionFromContentType(contentType);
+                        log.info("Extracted cover image: id={}, type={}, size={} bytes", id, contentType, imageBytes.length);
+                        return new CoverImage(imageBytes, contentType, extension);
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Failed to decode cover image binary for id={}: {}", id, e.getMessage());
+                    }
+                }
+            }
+        }
+
+        if (imageId == null) {
+            NodeList allBinaries = doc.getElementsByTagName("binary");
+            for (int i = 0; i < allBinaries.getLength(); i++) {
+                Element binary = (Element) allBinaries.item(i);
+                String id = binary.getAttribute("id");
+                String contentType = binary.getAttribute("content-type");
+                if (contentType != null && contentType.startsWith("image/")) {
+                    if (id != null && (id.toLowerCase().contains("cover") || id.toLowerCase().contains("img"))) {
+                        String base64Data = binary.getTextContent().replaceAll("\\s+", "");
+                        if (!base64Data.isEmpty()) {
+                            try {
+                                byte[] imageBytes = Base64.getMimeDecoder().decode(base64Data);
+                                String extension = extensionFromContentType(contentType);
+                                return new CoverImage(imageBytes, contentType, extension);
+                            } catch (IllegalArgumentException e) {
+                                log.warn("Failed to decode cover image binary for id={}: {}", id, e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        log.debug("No cover image found in FB2");
+        return null;
+    }
+
+    private String guessContentType(String id) {
+        if (id == null) return null;
+        String lower = id.toLowerCase();
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".gif")) return "image/gif";
+        return null;
+    }
+
+    private String extensionFromContentType(String contentType) {
+        if (contentType == null) return "jpg";
+        if ("image/png".equals(contentType)) return "png";
+        if ("image/gif".equals(contentType)) return "gif";
+        if ("image/webp".equals(contentType)) return "webp";
+        return "jpg";
+    }
+
     public static class ParsedMetadata {
         private String title;
         private String author;
@@ -163,6 +269,7 @@ public class Fb2MetadataParser {
         private String description;
         private LocalDate publicationDate;
         private String language;
+        private CoverImage coverImage;
 
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }
@@ -176,5 +283,23 @@ public class Fb2MetadataParser {
         public void setPublicationDate(LocalDate publicationDate) { this.publicationDate = publicationDate; }
         public String getLanguage() { return language; }
         public void setLanguage(String language) { this.language = language; }
+        public CoverImage getCoverImage() { return coverImage; }
+        public void setCoverImage(CoverImage coverImage) { this.coverImage = coverImage; }
+    }
+
+    public static class CoverImage {
+        private final byte[] data;
+        private final String contentType;
+        private final String extension;
+
+        public CoverImage(byte[] data, String contentType, String extension) {
+            this.data = data;
+            this.contentType = contentType;
+            this.extension = extension;
+        }
+
+        public byte[] getData() { return data; }
+        public String getContentType() { return contentType; }
+        public String getExtension() { return extension; }
     }
 }

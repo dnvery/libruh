@@ -1,0 +1,1 @@
+ALTER TABLE books ADD COLUMN cover_image_path VARCHAR(1000) NULL AFTER azw8_file_path;

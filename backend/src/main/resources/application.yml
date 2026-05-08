@@ -29,6 +29,7 @@ storage:
   fb2-subdir: fb2
   epub-subdir: epub
   azw8-subdir: azw8
+  covers-subdir: covers
 
 fbc:
   path: ${FBC_PATH:/usr/local/bin/fbc}

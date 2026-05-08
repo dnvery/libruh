@@ -41,6 +41,9 @@ public class Book {
     @Column(name = "azw8_file_path", length = 1000)
     private String azw8FilePath;
 
+    @Column(name = "cover_image_path", length = 1000)
+    private String coverImagePath;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "conversion_status", nullable = false, length = 20)
     private ConversionStatus conversionStatus = ConversionStatus.PENDING;
@@ -77,6 +80,8 @@ public class Book {
     public void setEpubFilePath(String epubFilePath) { this.epubFilePath = epubFilePath; }
     public String getAzw8FilePath() { return azw8FilePath; }
     public void setAzw8FilePath(String azw8FilePath) { this.azw8FilePath = azw8FilePath; }
+    public String getCoverImagePath() { return coverImagePath; }
+    public void setCoverImagePath(String coverImagePath) { this.coverImagePath = coverImagePath; }
     public ConversionStatus getConversionStatus() { return conversionStatus; }
     public void setConversionStatus(ConversionStatus conversionStatus) { this.conversionStatus = conversionStatus; }
     public Instant getUploadDate() { return uploadDate; }

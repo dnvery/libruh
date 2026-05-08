@@ -7,6 +7,6 @@ RUN mvn package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-RUN mkdir -p /app/storage/fb2 /app/storage/epub /app/storage/azw8
+RUN mkdir -p /app/storage/fb2 /app/storage/epub /app/storage/azw8 /app/storage/covers
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

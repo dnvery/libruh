@@ -17,10 +17,11 @@ public class BookResponse {
     private Instant uploadDate;
     private Long userId;
     private String username;
+    private boolean hasCover;
 
     public BookResponse(Long id, String title, String author, String genre, String description,
                         LocalDate publicationDate, String language, ConversionStatus conversionStatus,
-                        Instant uploadDate, Long userId, String username) {
+                        Instant uploadDate, Long userId, String username, boolean hasCover) {
         this.id = id;
         this.title = title;
         this.author = author;
@@ -32,6 +33,7 @@ public class BookResponse {
         this.uploadDate = uploadDate;
         this.userId = userId;
         this.username = username;
+        this.hasCover = hasCover;
     }
 
     public Long getId() { return id; }
@@ -45,4 +47,5 @@ public class BookResponse {
     public Instant getUploadDate() { return uploadDate; }
     public Long getUserId() { return userId; }
     public String getUsername() { return username; }
+    public boolean isHasCover() { return hasCover; }
 }

@@ -34,4 +34,8 @@ export const bookService = {
   downloadAzw8(id) {
     return api.get(`/books/${id}/download/azw8`, { responseType: 'blob' })
   },
+
+  coverUrl(id) {
+    return `/api/books/${id}/cover`
+  },
 }

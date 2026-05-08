@@ -11,39 +11,50 @@
       <router-link to="/books" class="text-primary-600 hover:text-primary-800 text-sm mb-4 inline-block">&larr; Back to books</router-link>
 
       <div class="bg-white rounded-lg shadow-md p-6 mt-2">
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-800">{{ book.title }}</h1>
-            <p class="text-gray-600 mt-1">by {{ book.author }}</p>
+        <div class="flex gap-6 mb-4">
+          <div v-if="book.hasCover" class="shrink-0">
+            <img
+              :src="`/api/books/${book.id}/cover`"
+              :alt="book.title"
+              class="w-40 h-60 object-contain rounded border border-gray-200"
+            />
           </div>
-          <span
-            :class="statusClass(book.conversionStatus)"
-            class="px-3 py-1 rounded-full text-sm font-medium"
-          >
-            {{ book.conversionStatus }}
-          </span>
-        </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h1 class="text-2xl font-bold text-gray-800 truncate">{{ book.title }}</h1>
+                <p class="text-gray-600 mt-1">by {{ book.author }}</p>
+              </div>
+              <span
+                :class="statusClass(book.conversionStatus)"
+                class="px-3 py-1 rounded-full text-sm font-medium shrink-0"
+              >
+                {{ book.conversionStatus }}
+              </span>
+            </div>
 
-        <div class="grid grid-cols-2 gap-y-3 gap-x-8 text-sm mb-6">
-          <div v-if="book.genre">
-            <span class="text-gray-500">Genre:</span>
-            <span class="ml-2 text-gray-800">{{ book.genre }}</span>
-          </div>
-          <div v-if="book.language">
-            <span class="text-gray-500">Language:</span>
-            <span class="ml-2 text-gray-800">{{ book.language }}</span>
-          </div>
-          <div v-if="book.publicationDate">
-            <span class="text-gray-500">Published:</span>
-            <span class="ml-2 text-gray-800">{{ book.publicationDate }}</span>
-          </div>
-          <div v-if="book.uploadDate">
-            <span class="text-gray-500">Uploaded:</span>
-            <span class="ml-2 text-gray-800">{{ new Date(book.uploadDate).toLocaleDateString() }}</span>
-          </div>
-          <div>
-            <span class="text-gray-500">Uploaded by:</span>
-            <span class="ml-2 text-gray-800">{{ book.username }}</span>
+            <div class="grid grid-cols-2 gap-y-2 gap-x-8 text-sm mt-4">
+              <div v-if="book.genre">
+                <span class="text-gray-500">Genre:</span>
+                <span class="ml-2 text-gray-800">{{ book.genre }}</span>
+              </div>
+              <div v-if="book.language">
+                <span class="text-gray-500">Language:</span>
+                <span class="ml-2 text-gray-800">{{ book.language }}</span>
+              </div>
+              <div v-if="book.publicationDate">
+                <span class="text-gray-500">Published:</span>
+                <span class="ml-2 text-gray-800">{{ book.publicationDate }}</span>
+              </div>
+              <div v-if="book.uploadDate">
+                <span class="text-gray-500">Uploaded:</span>
+                <span class="ml-2 text-gray-800">{{ new Date(book.uploadDate).toLocaleDateString() }}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Uploaded by:</span>
+                <span class="ml-2 text-gray-800">{{ book.username }}</span>
+              </div>
+            </div>
           </div>
         </div>
 

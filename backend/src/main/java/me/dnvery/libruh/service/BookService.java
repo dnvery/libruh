@@ -10,6 +10,9 @@ import me.dnvery.libruh.exception.ResourceNotFoundException;
 import me.dnvery.libruh.repository.BookRepository;
 import me.dnvery.libruh.repository.UserRepository;
 import me.dnvery.libruh.service.Fb2MetadataParser.ParsedMetadata;
+import me.dnvery.libruh.service.Fb2MetadataParser.CoverImage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -35,6 +38,8 @@ import java.util.zip.ZipInputStream;
 @Transactional
 public class BookService {
 
+    private static final Logger log = LoggerFactory.getLogger(BookService.class);
+
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final Fb2MetadataParser metadataParser;
@@ -51,6 +56,9 @@ public class BookService {
 
     @Value("${storage.azw8-subdir:azw8}")
     private String azw8Subdir;
+
+    @Value("${storage.covers-subdir:covers}")
+    private String coversSubdir;
 
     public BookService(BookRepository bookRepository, UserRepository userRepository,
                        Fb2MetadataParser metadataParser, ConversionService conversionService) {
@@ -124,6 +132,20 @@ public class BookService {
             book.setDescription(metadata.getDescription());
             book.setPublicationDate(metadata.getPublicationDate());
             book.setLanguage(metadata.getLanguage());
+
+            if (metadata.getCoverImage() != null) {
+                try {
+                    CoverImage cover = metadata.getCoverImage();
+                    Path coversDir = Paths.get(storageDir, coversSubdir);
+                    Files.createDirectories(coversDir);
+                    Path coverPath = coversDir.resolve(uuid + "." + cover.getExtension());
+                    Files.write(coverPath, cover.getData());
+                    book.setCoverImagePath(coverPath.toString());
+                    log.info("Saved cover image for book {}: {} bytes", uuid, cover.getData().length);
+                } catch (IOException e) {
+                    log.warn("Failed to save cover image for book: {}", e.getMessage());
+                }
+            }
         } else {
             book.setTitle(sanitizeFilename(originalFilename));
             book.setAuthor("Unknown");
@@ -189,6 +211,7 @@ public class BookService {
         deleteFileIfExists(book.getFb2FilePath());
         deleteFileIfExists(book.getEpubFilePath());
         deleteFileIfExists(book.getAzw8FilePath());
+        deleteFileIfExists(book.getCoverImagePath());
 
         bookRepository.delete(book);
     }
@@ -246,6 +269,51 @@ public class BookService {
         return sanitizedTitle + "." + format.toLowerCase();
     }
 
+    public CoverImageData getCoverImage(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
+
+        String coverPath = book.getCoverImagePath();
+        if (coverPath == null || coverPath.isBlank()) {
+            throw new ResourceNotFoundException("No cover image for book id: " + id);
+        }
+
+        try {
+            Path path = Paths.get(coverPath);
+            Resource resource = new UrlResource(path.toUri());
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new ResourceNotFoundException("Cover image not found on disk for book id: " + id);
+            }
+            String extension = coverPath.substring(coverPath.lastIndexOf('.') + 1).toLowerCase();
+            String contentType;
+            if ("png".equals(extension)) {
+                contentType = "image/png";
+            } else if ("gif".equals(extension)) {
+                contentType = "image/gif";
+            } else if ("webp".equals(extension)) {
+                contentType = "image/webp";
+            } else {
+                contentType = "image/jpeg";
+            }
+            return new CoverImageData(resource, contentType);
+        } catch (IOException e) {
+            throw new ResourceNotFoundException("Cover image not found for book id: " + id);
+        }
+    }
+
+    public static class CoverImageData {
+        private final Resource resource;
+        private final String contentType;
+
+        public CoverImageData(Resource resource, String contentType) {
+            this.resource = resource;
+            this.contentType = contentType;
+        }
+
+        public Resource resource() { return resource; }
+        public String contentType() { return contentType; }
+    }
+
     private String sanitizeFilename(String filename) {
         return filename.replaceAll("(?i)\\.fb2\\.zip$", "").replaceAll("(?i)\\.fb2$", "").replaceAll("[^a-zA-Z0-9\\s\\-]", "").trim();
     }
@@ -271,7 +339,8 @@ public class BookService {
                 book.getConversionStatus(),
                 book.getUploadDate(),
                 book.getUser().getId(),
-                book.getUser().getUsername()
+                book.getUser().getUsername(),
+                book.getCoverImagePath() != null && !book.getCoverImagePath().isBlank()
         );
     }
 

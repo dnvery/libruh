@@ -5,6 +5,7 @@ import me.dnvery.libruh.dto.book.BookResponse;
 import me.dnvery.libruh.dto.book.BookUpdateRequest;
 import me.dnvery.libruh.service.BookService;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/books")
@@ -86,5 +88,14 @@ public class BookController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .body(resource);
+    }
+
+    @GetMapping("/{id}/cover")
+    public ResponseEntity<Resource> getCoverImage(@PathVariable Long id) {
+        BookService.CoverImageData cover = bookService.getCoverImage(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(cover.contentType()))
+                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+                .body(cover.resource());
     }
 }
