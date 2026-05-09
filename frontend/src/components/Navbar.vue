@@ -9,6 +9,9 @@
           <router-link to="/books" class="text-sm text-gray-600 hover:text-primary-600">
             My Books
           </router-link>
+          <router-link to="/config" class="text-sm text-gray-600 hover:text-primary-600">
+            Config
+          </router-link>
           <span class="text-gray-600 text-sm">{{ authStore.username }}</span>
           <button
             @click="handleLogout"

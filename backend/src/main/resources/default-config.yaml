@@ -1,0 +1,124 @@
+version: 1
+document:
+    fix_zip: false
+    open_from_cover: false
+    toc_type: normal
+    output_name_template: |
+        {{- $all := "" -}}
+        {{- if gt (len .Authors) 0 -}}
+        {{-   with first .Authors -}}
+        {{-     $all = .LastName -}}
+        {{-     if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}
+        {{-     if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}
+        {{-   end -}}
+        {{-   if gt (len .Authors) 1 -}}
+        {{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (printf "%s%s" $all ", et al") }}{{- end -}}
+        {{-   end -}}
+        {{-   $all = cat $all "-" -}}
+        {{- end -}}
+        {{- if $all -}}
+        {{-   cat $all .Title -}}
+        {{- else -}}
+        {{-   .Title -}}
+        {{- end -}}
+    file_name_transliterate: false
+    insert_soft_hyphen: false
+    images:
+        use_broken: false
+        remove_transparency: false
+        scale_factor: 1
+        optimize: true
+        jpeg_quality_level: 95
+        screen:
+            width: 1264
+            height: 1680
+        cover:
+            generate: false
+            resize: stretch
+    footnotes:
+        mode: default
+        bodies:
+            - notes
+            - comments
+            - примечания
+            - комментарии
+        backlinks: "[<]"
+        more_paragraphs: "(~) "
+        label_template: |
+            {{- if gt .BodyNumber 0 -}}
+            {{-   printf "%d" .BodyNumber -}}.
+            {{- end -}}
+            {{- printf "%d" .NoteNumber -}}
+    annotation:
+        enable: false
+        title: Annotation
+        in_toc: true
+    toc_page:
+        placement: none
+        authors_template: |
+            {{- $names := list -}}
+            {{- range .Authors -}}
+            {{-   $name := list -}}
+            {{-   if .FirstName -}}{{ $name = append $name .FirstName -}}{{- end -}}
+            {{-   if .MiddleName -}}{{ $name = append $name .MiddleName -}}{{- end -}}
+            {{-   if .LastName -}}{{ $name = append $name .LastName }}{{- end -}}
+            {{-   $names = append $names (join " " $name) -}}
+            {{- end -}}
+            {{- join ", " $names -}}
+        include_chapters_without_title: false
+    metainformation:
+        title_template: |
+            {{- if gt (len .Series) 0 -}}
+            {{-   with first .Series -}}
+            {{-     $seriesLetters := list -}}
+            {{-     range $word := splitList " " .Name -}}
+            {{-       $seriesLetters = append $seriesLetters (upper (first (splitList "" $word))) -}}
+            {{-     end -}}
+            {{-     if gt (len $seriesLetters) 0 -}}
+            {{-       "(" }}{{- join "" $seriesLetters -}}
+            {{-       if gt .Number 0 -}}
+            {{-         printf " - %02d" .Number -}}
+            {{-       end -}}
+            {{-       ") " -}}
+            {{-     end -}}
+            {{-   end -}}
+            {{- end -}}
+            {{  .Title -}}
+        creator_name_template: |
+            {{- .LastName -}}
+            {{- if .FirstName }} {{.FirstName}}{{ end -}}
+            {{- if .MiddleName }} {{.MiddleName }}{{ end -}}
+        transliterate: false
+    vignettes:
+        book: {}
+        chapter: {}
+        section: {}
+    dropcaps:
+        enable: false
+        ignore_symbols: "'\"-.…0123456789‒–—«»“”<>"
+    page_map:
+        enable: true
+        size: 2300
+        adobe_de: false
+    text_transformations:
+        speech:
+            enable: false
+            from: "‐‑−–—―"
+            to: "— "
+        dashes:
+            enable: false
+            from: "‐‑−–—―"
+            to: "—"
+        dialogue:
+            enable: false
+            from: "‐‑−–—―"
+            to: " "
+logging:
+    file:
+        level: debug
+        destination: fb2cng.log
+        mode: overwrite
+    console:
+        level: normal
+reporting:
+    destination: fb2cng-report.zip

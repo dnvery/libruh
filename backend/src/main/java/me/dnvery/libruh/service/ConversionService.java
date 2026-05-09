@@ -1,5 +1,6 @@
 package me.dnvery.libruh.service;
 
+import me.dnvery.libruh.dto.config.Fb2cngConfig;
 import me.dnvery.libruh.entity.Book;
 import me.dnvery.libruh.enums.ConversionStatus;
 import me.dnvery.libruh.exception.ConversionException;
@@ -28,6 +29,7 @@ public class ConversionService {
     private static final Logger log = LoggerFactory.getLogger(ConversionService.class);
 
     private final BookRepository bookRepository;
+    private final ConversionConfigService configService;
 
     @Value("${fbc.path:/usr/local/bin/fbc}")
     private String fbcPath;
@@ -41,8 +43,9 @@ public class ConversionService {
     @Value("${storage.azw8-subdir:azw8}")
     private String azw8Subdir;
 
-    public ConversionService(BookRepository bookRepository) {
+    public ConversionService(BookRepository bookRepository, ConversionConfigService configService) {
         this.bookRepository = bookRepository;
+        this.configService = configService;
     }
 
     @Async
@@ -61,14 +64,19 @@ public class ConversionService {
         Path epubDir = Paths.get(storageDir, epubSubdir);
         Path azw8Dir = Paths.get(storageDir, azw8Subdir);
 
+        Path configFile = null;
         try {
+            Fb2cngConfig config = configService.getConfig();
+            configFile = configService.writeConfigToTempFile(config);
+            log.info("Config written to temp file: {}", configFile);
+
             Files.createDirectories(epubDir);
             Files.createDirectories(azw8Dir);
 
             log.info("Starting conversion for book {} (uuid={})", bookId, uuid);
 
-            Process epubProcess = runFbc("--to", "epub3", fb2Path.toString(), epubDir.toString());
-            Process azw8Process = runFbc("--to", "azw8", fb2Path.toString(), azw8Dir.toString());
+            Process epubProcess = runFbc(configFile, "--to", "epub3", fb2Path.toString(), epubDir.toString());
+            Process azw8Process = runFbc(configFile, "--to", "azw8", fb2Path.toString(), azw8Dir.toString());
 
             int epubExit = epubProcess.waitFor();
             String epubLog = readOutput(epubProcess);
@@ -111,15 +119,25 @@ public class ConversionService {
         } catch (Exception e) {
             log.error("Conversion failed for book {}: {}", bookId, e.getMessage(), e);
             book.setConversionStatus(ConversionStatus.FAILED);
+        } finally {
+            if (configFile != null) {
+                try {
+                    Files.deleteIfExists(configFile);
+                } catch (IOException e) {
+                    log.warn("Failed to delete temp config file: {}", configFile, e);
+                }
+            }
         }
 
         bookRepository.save(book);
     }
 
-    private Process runFbc(String... args) throws IOException {
+    private Process runFbc(Path configFile, String... args) throws IOException {
         List<String> command = new ArrayList<>();
         command.add(fbcPath);
         command.add("convert");
+        command.add("--config");
+        command.add(configFile.toString());
         command.addAll(Arrays.asList(args));
         command.add("--overwrite");
 

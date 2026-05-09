@@ -37,6 +37,12 @@ const routes = [
     component: () => import('../views/BookDetailView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/config',
+    name: 'Config',
+    component: () => import('../views/ConfigView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({
