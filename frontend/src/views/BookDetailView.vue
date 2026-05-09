@@ -136,6 +136,14 @@
           </button>
           <button
             v-if="isOwner"
+            @click="handleReconvert"
+            :disabled="reconverting"
+            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium disabled:opacity-50"
+          >
+            {{ reconverting ? 'Reconverting...' : 'Reconvert' }}
+          </button>
+          <button
+            v-if="isOwner"
             @click="showEdit = true"
             class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium"
           >
@@ -180,6 +188,7 @@ const conversion = ref(null)
 const loading = ref(true)
 const error = ref('')
 const downloading = ref(false)
+const reconverting = ref(false)
 const showEdit = ref(false)
 
 const isOwner = computed(() => book.value && book.value.username === authStore.username)
@@ -262,6 +271,20 @@ async function handleDelete() {
 function onBookUpdated(updatedBook) {
   book.value = updatedBook
   showEdit.value = false
+}
+
+async function handleReconvert() {
+  if (!confirm('Reconvert this book? Existing EPUB and AZW8 files will be replaced.')) return
+  reconverting.value = true
+  try {
+    await bookService.reconvert(book.value.id)
+    book.value.conversionStatus = 'PENDING'
+    conversion.value = null
+  } catch {
+    alert('Failed to start reconversion')
+  } finally {
+    reconverting.value = false
+  }
 }
 
 onMounted(loadBook)

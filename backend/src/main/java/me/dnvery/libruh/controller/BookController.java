@@ -62,6 +62,14 @@ public class BookController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/reconvert")
+    public ResponseEntity<Void> reconvertBook(
+            @PathVariable Long id,
+            @AuthenticationPrincipal String username) {
+        bookService.reconvertBook(id, username);
+        return ResponseEntity.accepted().build();
+    }
+
     @GetMapping("/search")
     public ResponseEntity<BookListResponse> searchBooks(
             @RequestParam String query,

@@ -42,4 +42,8 @@ export const bookService = {
   conversionDetail(id) {
     return api.get(`/books/${id}/conversion`)
   },
+
+  reconvert(id) {
+    return api.post(`/books/${id}/reconvert`)
+  },
 }

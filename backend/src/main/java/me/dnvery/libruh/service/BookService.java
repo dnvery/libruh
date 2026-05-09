@@ -224,6 +224,31 @@ public class BookService {
         bookRepository.delete(book);
     }
 
+    public void reconvertBook(Long id, String username) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
+
+        if (!book.getUser().getUsername().equals(username)) {
+            throw new IllegalArgumentException("You can only modify your own books");
+        }
+
+        if (book.getFb2FilePath() == null || book.getFb2FilePath().isBlank()) {
+            throw new IllegalArgumentException("FB2 file path is missing for this book");
+        }
+
+        deleteFileIfExists(book.getEpubFilePath());
+        deleteFileIfExists(book.getAzw8FilePath());
+
+        book.setEpubFilePath(null);
+        book.setAzw8FilePath(null);
+        book.setEpubFileSize(null);
+        book.setAzw8FileSize(null);
+        book.setConversionStatus(ConversionStatus.PENDING);
+        bookRepository.save(book);
+
+        conversionService.convertAsync(book.getId());
+    }
+
     public BookListResponse searchBooks(String query, String field, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         Page<Book> bookPage;
