@@ -156,9 +156,6 @@
           >
             Delete
           </button>
-          <span v-if="book.conversionStatus === 'PENDING' || book.conversionStatus === 'PROCESSING'" class="text-sm text-yellow-600 self-center">
-            Conversion in progress... refresh to check status.
-          </span>
         </div>
       </div>
 
@@ -173,7 +170,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { bookService } from '../services/bookService'
@@ -223,12 +220,15 @@ async function loadBook() {
     const { data } = await bookService.get(route.params.id)
     book.value = data
     if (data.conversionStatus === 'COMPLETED') {
+      conversion.value = null
       try {
         const { data: convData } = await bookService.conversionDetail(data.id)
         conversion.value = convData
       } catch {
         // conversion detail not available, skip
       }
+    } else if (data.conversionStatus === 'PENDING' || data.conversionStatus === 'PROCESSING') {
+      startPolling(data.id)
     }
   } catch {
     error.value = 'Failed to load book'
@@ -273,6 +273,36 @@ function onBookUpdated(updatedBook) {
   showEdit.value = false
 }
 
+let pollInterval = null
+
+function startPolling(bookId) {
+  stopPolling()
+  pollInterval = setInterval(async () => {
+    try {
+      const { data } = await bookService.get(bookId)
+      book.value = data
+      if (data.conversionStatus === 'COMPLETED') {
+        stopPolling()
+        try {
+          const { data: convData } = await bookService.conversionDetail(bookId)
+          conversion.value = convData
+        } catch {}
+      } else if (data.conversionStatus === 'FAILED') {
+        stopPolling()
+      }
+    } catch {
+      stopPolling()
+    }
+  }, 1000)
+}
+
+function stopPolling() {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
+}
+
 async function handleReconvert() {
   if (!confirm('Reconvert this book? Existing EPUB and AZW8 files will be replaced.')) return
   reconverting.value = true
@@ -280,6 +310,8 @@ async function handleReconvert() {
     await bookService.reconvert(book.value.id)
     book.value.conversionStatus = 'PENDING'
     conversion.value = null
+    stopPolling()
+    startPolling(book.value.id)
   } catch {
     alert('Failed to start reconversion')
   } finally {
@@ -288,4 +320,5 @@ async function handleReconvert() {
 }
 
 onMounted(loadBook)
+onUnmounted(stopPolling)
 </script>

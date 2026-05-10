@@ -2,12 +2,29 @@
   <div>
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-800">My Books</h1>
-      <router-link
-        to="/books/upload"
-        class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium"
-      >
-        Upload Book
-      </router-link>
+      <div class="flex items-center gap-3">
+        <template v-if="selected.size > 0">
+          <span class="text-sm text-gray-600">{{ selected.size }} selected</span>
+          <button
+            @click="deleteSelected"
+            class="px-3 py-1.5 text-sm text-red-600 border border-red-300 rounded-md hover:bg-red-50"
+          >
+            Delete Selected
+          </button>
+          <button
+            @click="clearSelection"
+            class="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50"
+          >
+            Clear
+          </button>
+        </template>
+        <router-link
+          to="/books/upload"
+          class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium"
+        >
+          Upload Book
+        </router-link>
+      </div>
     </div>
 
     <SearchBar @search="handleSearch" @clear="handleClear" class="mb-4" />
@@ -27,39 +44,78 @@
         Showing results for "{{ searchQuery }}" in {{ searchField }}
       </p>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <router-link
+      <div class="flex items-center gap-2 mb-4 p-2 bg-gray-50 rounded-md">
+        <input
+          v-if="selected.size > 0"
+          type="checkbox"
+          :checked="selected.size === books.length"
+          :indeterminate="selected.size > 0 && selected.size < books.length"
+          @change="selected.size === books.length ? clearSelection() : selectAll()"
+          class="w-4 h-4"
+        />
+        <input
+          v-else
+          type="checkbox"
+          :checked="false"
+          :disabled="true"
+          class="w-4 h-4 opacity-0"
+        />
+        <span class="text-sm text-gray-600">{{ selected.size > 0 ? 'Select all on this page' : 'Select books to delete multiple' }}</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-6 xl:grid-cols-6 gap-4">
+        <div
           v-for="book in books"
           :key="book.id"
-          :to="`/books/${book.id}`"
-          class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden block"
+          :class="[
+            'bg-white rounded-lg shadow-sm border overflow-hidden block cursor-pointer transition-shadow',
+            selected.has(book.id)
+              ? 'border-primary-500 ring-2 ring-primary-200 shadow-md'
+              : 'border-gray-200 hover:shadow-md',
+          ]"
+          @click="toggleSelect(book.id)"
         >
-          <div class="aspect-[2/3] bg-gray-100 flex items-center justify-center overflow-hidden">
-            <img
-              v-if="book.hasCover"
-              :src="`/api/books/${book.id}/cover`"
-              :alt="book.title"
-              class="w-full h-full object-contain"
-              loading="lazy"
-            />
-            <svg v-else class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-          </div>
-          <div class="p-3">
-            <h3 class="font-semibold text-gray-800 text-sm truncate">{{ book.title }}</h3>
-            <p class="text-xs text-gray-500 truncate mt-0.5">{{ book.author }}</p>
-            <div class="flex items-center gap-2 mt-2">
-              <span
-                :class="statusClass(book.conversionStatus)"
-                class="px-2 py-0.5 rounded-full text-xs font-medium"
+          <router-link :to="`/books/${book.id}`" @click.stop class="block">
+            <div class="relative">
+              <div class="aspect-[2/3] bg-gray-100 flex items-center justify-center overflow-hidden">
+                <img
+                  v-if="book.hasCover"
+                  :src="`/api/books/${book.id}/cover`"
+                  :alt="book.title"
+                  class="w-full h-full object-contain"
+                  loading="lazy"
+                />
+                <svg v-else class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div
+                class="absolute top-2 right-2"
+                @click.stop
               >
-                {{ book.conversionStatus }}
-              </span>
-              <span v-if="book.genre" class="text-xs text-gray-400 truncate">{{ book.genre }}</span>
+                <input
+                  type="checkbox"
+                  :checked="selected.has(book.id)"
+                  @change="toggleSelect(book.id)"
+                  class="w-5 h-5 rounded border-gray-300"
+                />
+              </div>
             </div>
-          </div>
-        </router-link>
+            <div class="p-3">
+              <h3 class="font-semibold text-gray-800 text-sm truncate">{{ book.title }}</h3>
+              <p class="text-xs text-gray-500 truncate mt-0.5">{{ book.author }}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <span
+                  :class="statusClass(book.conversionStatus)"
+                  class="px-2 py-0.5 rounded-full text-xs font-medium"
+                >
+                  {{ book.conversionStatus }}
+                </span>
+                <span v-if="book.genre" class="text-xs text-gray-400 truncate">{{ book.genre }}</span>
+              </div>
+            </div>
+          </router-link>
+        </div>
       </div>
 
       <div v-if="pagination.totalPages > 1" class="flex items-center justify-center gap-2 mt-8">
@@ -100,6 +156,38 @@ const pagination = ref({ page: 0, size: 20, totalElements: 0, totalPages: 0 })
 const searchActive = ref(false)
 const searchQuery = ref('')
 const searchField = ref('title')
+const selected = ref(new Set())
+
+function toggleSelect(id) {
+  if (selected.value.has(id)) {
+    selected.value.delete(id)
+  } else {
+    selected.value.add(id)
+  }
+  selected.value = new Set(selected.value)
+}
+
+function selectAll() {
+  selected.value = new Set(books.value.map((b) => b.id))
+}
+
+function clearSelection() {
+  selected.value = new Set()
+}
+
+async function deleteSelected() {
+  if (selected.value.size === 0) return
+  if (!confirm(`Delete ${selected.value.size} book(s)?`)) return
+  try {
+    for (const id of selected.value) {
+      await bookService.delete(id)
+    }
+    clearSelection()
+    await loadPage(pagination.value.page)
+  } catch {
+    alert('Failed to delete some books')
+  }
+}
 
 function statusClass(status) {
   switch (status) {
@@ -117,6 +205,7 @@ function statusClass(status) {
 async function loadPage(page) {
   loading.value = true
   error.value = ''
+  clearSelection()
   try {
     let data
     if (searchActive.value) {
