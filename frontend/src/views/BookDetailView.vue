@@ -120,6 +120,13 @@
         <div class="flex flex-wrap gap-3 border-t pt-4">
           <button
             v-if="book.conversionStatus === 'COMPLETED'"
+            @click="readBook"
+            class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium"
+          >
+            Read
+          </button>
+          <button
+            v-if="book.conversionStatus === 'COMPLETED'"
             @click="download('epub')"
             :disabled="downloading"
             class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium disabled:opacity-50"
@@ -256,6 +263,10 @@ async function download(format) {
   } finally {
     downloading.value = false
   }
+}
+
+function readBook() {
+  router.push(`/books/${book.value.id}/read`)
 }
 
 async function handleDelete() {

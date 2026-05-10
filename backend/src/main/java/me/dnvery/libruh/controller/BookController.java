@@ -79,6 +79,16 @@ public class BookController {
         return ResponseEntity.ok(bookService.searchBooks(query, field, page, size));
     }
 
+    @GetMapping("/{id}/epub")
+    public ResponseEntity<Resource> streamEpub(@PathVariable Long id) {
+        Resource resource = bookService.downloadBook(id, "epub");
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/epub+zip"))
+                .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
+                .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                .body(resource);
+    }
+
     @GetMapping("/{id}/download/epub")
     public ResponseEntity<Resource> downloadEpub(@PathVariable Long id) {
         Resource resource = bookService.downloadBook(id, "epub");

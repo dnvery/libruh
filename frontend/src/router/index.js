@@ -38,6 +38,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/books/:id/read',
+    name: 'BookReader',
+    component: () => import('../views/BookReaderView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/config',
     name: 'Config',
     component: () => import('../views/ConfigView.vue'),
