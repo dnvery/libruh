@@ -24,12 +24,7 @@
           {{ error }}
         </div>
 
-        <div v-if="uploadSuccess" class="text-green-700 text-sm bg-green-50 p-3 rounded-md">
-          Book uploaded successfully! Metadata is being extracted and conversion is in progress.
-          <router-link :to="`/books/${uploadedBookId}`" class="underline font-medium">View book</router-link>
-        </div>
-
-        <button
+                <button
           type="submit"
           :disabled="loading || !selectedFile"
           class="w-full py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -43,18 +38,18 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { bookService } from '../services/bookService'
+
+const router = useRouter()
 
 const selectedFile = ref(null)
 const loading = ref(false)
 const error = ref('')
-const uploadSuccess = ref(false)
-const uploadedBookId = ref(null)
 
 function onFileChange(e) {
   const file = e.target.files[0]
   error.value = ''
-  uploadSuccess.value = false
 
   if (file) {
     const name = file.name.toLowerCase()
@@ -74,16 +69,13 @@ async function handleUpload() {
 
   loading.value = true
   error.value = ''
-  uploadSuccess.value = false
 
   const formData = new FormData()
   formData.append('file', selectedFile.value)
 
   try {
     const { data } = await bookService.upload(formData)
-    uploadedBookId.value = data.id
-    uploadSuccess.value = true
-    selectedFile.value = null
+    router.push(`/books/${data.id}`)
   } catch (err) {
     if (err.response?.data?.error) {
       error.value = err.response.data.error
