@@ -2,7 +2,11 @@ package me.dnvery.libruh.dto.book;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.*;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class BookUpdateRequest {
 
     @NotBlank(message = "Title is required")
@@ -28,21 +32,4 @@ public class BookUpdateRequest {
 
     @Size(max = 10, message = "Sequence number must be at most 10 characters")
     private String sequenceNumber;
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
-    public String getGenre() { return genre; }
-    public void setGenre(String genre) { this.genre = genre; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getPublicationDate() { return publicationDate; }
-    public void setPublicationDate(String publicationDate) { this.publicationDate = publicationDate; }
-    public String getLanguage() { return language; }
-    public void setLanguage(String language) { this.language = language; }
-    public String getSequenceName() { return sequenceName; }
-    public void setSequenceName(String sequenceName) { this.sequenceName = sequenceName; }
-    public String getSequenceNumber() { return sequenceNumber; }
-    public void setSequenceNumber(String sequenceNumber) { this.sequenceNumber = sequenceNumber; }
 }

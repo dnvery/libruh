@@ -1,5 +1,6 @@
 package me.dnvery.libruh.service;
 
+import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -224,6 +225,9 @@ public class EpubMetadataParser {
         return result;
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
     public static class EpubMetadata {
         private String title;
         private String author;
@@ -233,22 +237,5 @@ public class EpubMetadataParser {
         private String description;
         private String publicationDate;
         private List<String> subjects = new ArrayList<>();
-
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-        public String getAuthor() { return author; }
-        public void setAuthor(String author) { this.author = author; }
-        public String getPublisher() { return publisher; }
-        public void setPublisher(String publisher) { this.publisher = publisher; }
-        public String getLanguage() { return language; }
-        public void setLanguage(String language) { this.language = language; }
-        public String getIdentifier() { return identifier; }
-        public void setIdentifier(String identifier) { this.identifier = identifier; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        public String getPublicationDate() { return publicationDate; }
-        public void setPublicationDate(String publicationDate) { this.publicationDate = publicationDate; }
-        public List<String> getSubjects() { return subjects; }
-        public void setSubjects(List<String> subjects) { this.subjects = subjects; }
     }
 }

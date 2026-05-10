@@ -1,6 +1,7 @@
 package me.dnvery.libruh.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 import me.dnvery.libruh.enums.ConversionStatus;
 
 import java.time.Instant;
@@ -8,6 +9,10 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "books")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Book {
 
     @Id
@@ -71,41 +76,4 @@ public class Book {
     protected void onCreate() {
         uploadDate = Instant.now();
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
-    public String getGenre() { return genre; }
-    public void setGenre(String genre) { this.genre = genre; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public LocalDate getPublicationDate() { return publicationDate; }
-    public void setPublicationDate(LocalDate publicationDate) { this.publicationDate = publicationDate; }
-    public String getLanguage() { return language; }
-    public void setLanguage(String language) { this.language = language; }
-    public String getSequenceName() { return sequenceName; }
-    public void setSequenceName(String sequenceName) { this.sequenceName = sequenceName; }
-    public String getSequenceNumber() { return sequenceNumber; }
-    public void setSequenceNumber(String sequenceNumber) { this.sequenceNumber = sequenceNumber; }
-    public String getFb2FilePath() { return fb2FilePath; }
-    public void setFb2FilePath(String fb2FilePath) { this.fb2FilePath = fb2FilePath; }
-    public String getEpubFilePath() { return epubFilePath; }
-    public void setEpubFilePath(String epubFilePath) { this.epubFilePath = epubFilePath; }
-    public String getAzw8FilePath() { return azw8FilePath; }
-    public void setAzw8FilePath(String azw8FilePath) { this.azw8FilePath = azw8FilePath; }
-    public String getCoverImagePath() { return coverImagePath; }
-    public void setCoverImagePath(String coverImagePath) { this.coverImagePath = coverImagePath; }
-    public Long getEpubFileSize() { return epubFileSize; }
-    public void setEpubFileSize(Long epubFileSize) { this.epubFileSize = epubFileSize; }
-    public Long getAzw8FileSize() { return azw8FileSize; }
-    public void setAzw8FileSize(Long azw8FileSize) { this.azw8FileSize = azw8FileSize; }
-    public ConversionStatus getConversionStatus() { return conversionStatus; }
-    public void setConversionStatus(ConversionStatus conversionStatus) { this.conversionStatus = conversionStatus; }
-    public Instant getUploadDate() { return uploadDate; }
-    public void setUploadDate(Instant uploadDate) { this.uploadDate = uploadDate; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
 }

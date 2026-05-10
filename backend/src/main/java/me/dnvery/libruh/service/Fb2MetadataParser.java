@@ -1,5 +1,6 @@
 package me.dnvery.libruh.service;
 
+import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -274,6 +275,9 @@ public class Fb2MetadataParser {
         return "jpg";
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
     public static class ParsedMetadata {
         private String title;
         private String author;
@@ -284,27 +288,9 @@ public class Fb2MetadataParser {
         private CoverImage coverImage;
         private String sequenceName;
         private String sequenceNumber;
-
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-        public String getAuthor() { return author; }
-        public void setAuthor(String author) { this.author = author; }
-        public String getGenre() { return genre; }
-        public void setGenre(String genre) { this.genre = genre; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        public LocalDate getPublicationDate() { return publicationDate; }
-        public void setPublicationDate(LocalDate publicationDate) { this.publicationDate = publicationDate; }
-        public String getLanguage() { return language; }
-        public void setLanguage(String language) { this.language = language; }
-        public CoverImage getCoverImage() { return coverImage; }
-        public void setCoverImage(CoverImage coverImage) { this.coverImage = coverImage; }
-        public String getSequenceName() { return sequenceName; }
-        public void setSequenceName(String sequenceName) { this.sequenceName = sequenceName; }
-        public String getSequenceNumber() { return sequenceNumber; }
-        public void setSequenceNumber(String sequenceNumber) { this.sequenceNumber = sequenceNumber; }
     }
 
+    @Getter
     public static class CoverImage {
         private final byte[] data;
         private final String contentType;
@@ -315,9 +301,5 @@ public class Fb2MetadataParser {
             this.contentType = contentType;
             this.extension = extension;
         }
-
-        public byte[] getData() { return data; }
-        public String getContentType() { return contentType; }
-        public String getExtension() { return extension; }
     }
 }

@@ -1,11 +1,16 @@
 package me.dnvery.libruh.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "config_presets")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ConfigPreset {
 
     @Id
@@ -25,13 +30,4 @@ public class ConfigPreset {
     protected void onCreate() {
         createdAt = Instant.now();
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getConfigJson() { return configJson; }
-    public void setConfigJson(String configJson) { this.configJson = configJson; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
