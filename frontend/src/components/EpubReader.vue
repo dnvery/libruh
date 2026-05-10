@@ -367,10 +367,17 @@ onUnmounted(() => {
 <style scoped>
 .epub-viewer {
   position: relative;
+  background-color: #f5f5f5;
+  transition: opacity 0.15s ease-in-out;
 }
 
 .epub-reader-container {
   background: #f9fafb;
   overflow: hidden;
+}
+
+/* Reduce white flash during navigation */
+.epub-viewer :deep(iframe) {
+  background-color: #f5f5f5;
 }
 </style>
