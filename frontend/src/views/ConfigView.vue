@@ -33,8 +33,10 @@
           <SelectField label="TOC Type" v-model="config.document.tocType" :options="['normal', 'flat', 'combined']" />
           <ToggleField label="Filename Transliterate" v-model="config.document.fileNameTransliterate" />
           <ToggleField label="Insert Soft Hyphen" v-model="config.document.insertSoftHyphen" />
+          <div class="md:col-span-2">
+            <TemplateField label="Output Name Template" v-model="config.document.outputNameTemplate" />
+          </div>
         </div>
-        <TemplateField label="Output Name Template" v-model="config.document.outputNameTemplate" />
       </ConfigSection>
 
       <ConfigSection title="Images">
@@ -68,9 +70,13 @@
           <SelectField label="Mode" v-model="config.document.footnotes.mode" :options="['default', 'chapter', 'end']" />
           <TextField label="Backlinks" v-model="config.document.footnotes.backlinks" />
           <TextField label="More Paragraphs" v-model="config.document.footnotes.moreParagraphs" />
+          <div class="md:col-span-2">
+            <ListField label="Bodies" v-model="config.document.footnotes.bodies" />
+          </div>
+          <div class="md:col-span-2">
+            <TemplateField label="Label Template" v-model="config.document.footnotes.labelTemplate" />
+          </div>
         </div>
-        <ListField label="Bodies" v-model="config.document.footnotes.bodies" />
-        <TemplateField label="Label Template" v-model="config.document.footnotes.labelTemplate" />
       </ConfigSection>
 
       <ConfigSection title="Annotation">
@@ -85,16 +91,18 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectField label="Placement" v-model="config.document.tocPage.placement" :options="['none', 'before-content', 'after-content']" />
           <ToggleField label="Include Chapters Without Title" v-model="config.document.tocPage.includeChaptersWithoutTitle" />
+          <div class="md:col-span-2">
+            <TemplateField label="Authors Template" v-model="config.document.tocPage.authorsTemplate" />
+          </div>
         </div>
-        <TemplateField label="Authors Template" v-model="config.document.tocPage.authorsTemplate" />
       </ConfigSection>
 
       <ConfigSection title="Metainformation">
         <div class="grid grid-cols-1 gap-4">
           <ToggleField label="Transliterate" v-model="config.document.metainformation.transliterate" />
+          <TemplateField label="Title Template" v-model="config.document.metainformation.titleTemplate" />
+          <TemplateField label="Creator Name Template" v-model="config.document.metainformation.creatorNameTemplate" />
         </div>
-        <TemplateField label="Title Template" v-model="config.document.metainformation.titleTemplate" />
-        <TemplateField label="Creator Name Template" v-model="config.document.metainformation.creatorNameTemplate" />
       </ConfigSection>
 
       <ConfigSection title="Vignettes">
