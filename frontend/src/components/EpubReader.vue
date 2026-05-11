@@ -151,6 +151,9 @@ const fontSize = ref(100)
 const navigationHistory = ref([])
 const canGoBack = ref(false)
 
+const STORAGE_KEY = 'libruh_reading_positions'
+const BOOK_TITLE_KEY = 'libruh_book_titles'
+
 let book = null
 let rendition = null
 
@@ -206,7 +209,6 @@ async function loadBook() {
     await book.ready
 
     const metadata = await book.loaded.metadata
-    bookTitle.value = metadata.title || 'Unknown Title'
 
     rendition = book.renderTo(viewerContainer.value, {
       width: '100%',
@@ -218,8 +220,15 @@ async function loadBook() {
 
     rendition.themes.fontSize(`${fontSize.value}%`)
 
-    // Display the first page immediately
-    await rendition.display()
+    bookTitle.value = metadata.title || 'Unknown Title'
+    saveBookTitle(bookTitle.value)
+
+    const savedCfi = loadSavedPosition()
+    if (savedCfi) {
+      await rendition.display(savedCfi)
+    } else {
+      await rendition.display()
+    }
 
     // Force a resize to trigger proper rendering
     setTimeout(() => {
@@ -239,11 +248,11 @@ async function loadBook() {
         const percentage = book.locations.percentageFromCfi(location.start.cfi)
         progressPercentage.value = Math.round(percentage * 100)
         currentLocation.value = `${progressPercentage.value}%`
+        savePosition(location.start.cfi)
 
         canGoPrev.value = !location.atStart
         canGoNext.value = !location.atEnd
       } else {
-        // Fallback when locations aren't ready yet
         currentLocation.value = 'Loading...'
         canGoPrev.value = !location.atStart
         canGoNext.value = !location.atEnd
@@ -338,6 +347,33 @@ function seekToPercentage(event) {
       rendition.display(cfi)
     }
   }
+}
+
+function loadPositions() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }
+}
+
+function savePosition(cfi) {
+  try {
+    const pos = loadPositions()
+    pos[String(props.bookId)] = cfi
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(pos))
+  } catch {}
+}
+
+function loadSavedPosition() {
+  try {
+    const pos = loadPositions()
+    return pos[String(props.bookId)] || null
+  } catch { return null }
+}
+
+function saveBookTitle(title) {
+  try {
+    const titles = JSON.parse(localStorage.getItem(BOOK_TITLE_KEY) || '{}')
+    titles[String(props.bookId)] = title
+    localStorage.setItem(BOOK_TITLE_KEY, JSON.stringify(titles))
+  } catch {}
 }
 
 function handleKeyPress(e) {
